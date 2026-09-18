@@ -8,7 +8,10 @@ from flask import Flask, render_template
 
 
 class Masterblog:
+    """A simple Flask app for a blog."""
+
     def __init__(self) -> None:
+        """Initialize the Flask app."""
         self.app = Flask(__name__)
         self.app.add_url_rule("/", view_func=self.index)
 
