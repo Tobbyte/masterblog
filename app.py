@@ -21,8 +21,32 @@ class Masterblog:
             view_func=self.route_add,
             methods=["GET", "POST"],
         )
-
         self.load_data()
+
+    def get_uid(self) -> int:
+        """Get a unique identifier for a new blog post.
+
+        Reads the last used UID from a file and increments it for
+        the next post.
+        If the file does not exist or is empty, it starts with
+        the num of the current blog posts + 1.
+        """
+        try:
+            with Path("data/uid").open(encoding="utf-8") as f:
+                last_uid = f.read()
+        except FileNotFoundError:
+            last_uid = ""
+
+        if not last_uid:
+            new_uid = len(self.blog_posts) + 1
+            with Path("data/uid").open("w", encoding="utf-8") as f:
+                f.write(str(new_uid))
+            return new_uid
+
+        try:
+            return int(last_uid) + 1
+        except ValueError:
+            return 1
 
     def route_index(self) -> str:
         """Render the index page with blog posts."""
@@ -43,7 +67,7 @@ class Masterblog:
 
     def save_data(self, new_post: dict) -> None:
         """Save a new blog post to the JSON file."""
-        new_id = len(self.blog_posts) + 1
+        new_id = self.get_uid()
         new_post["id"] = new_id
         posts_copy = deepcopy(self.blog_posts)
         posts_copy.append(new_post)
