@@ -2,24 +2,30 @@
 
 import json
 from pathlib import Path
+from typing import Any
 
 from flask import Flask, render_template
 
-app = Flask(__name__)
 
+class Masterblog:
+    def __init__(self) -> None:
+        self.app = Flask(__name__)
+        self.app.add_url_rule("/", view_func=self.index)
 
-@app.route("/")
-def index() -> str:
-    """Render the index page with blog posts."""
-    with Path("data/database.json", encoding="utf-8").open() as f:
-        blog_posts = json.load(f)
-        print(blog_posts)
-    return render_template(
-        "index.html",
-        posts=blog_posts,
-        blogtitle="Mein Block",
-    )
+    def index(self) -> str:
+        """Render the index page with blog posts."""
+        with Path("data/database.json").open(encoding="utf-8") as f:
+            blog_posts = json.load(f)
+        return render_template(
+            "index.html",
+            posts=blog_posts,
+            blogtitle="Mein Blog",
+        )
+
+    def run(self, **kwargs: Any) -> None:  # noqa: ANN401
+        """Start the Flask app."""
+        self.app.run(**kwargs)
 
 
 if __name__ == "__main__":
-    app.run(debug=True)  # noqa: S201
+    Masterblog().run(debug=True)
