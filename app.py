@@ -5,7 +5,8 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-from flask import Flask, render_template, request
+from flask import Flask, redirect, render_template, request, url_for
+from werkzeug import Response
 
 
 class Masterblog:
@@ -25,16 +26,18 @@ class Masterblog:
 
     def route_index(self) -> str:
         """Render the index page with blog posts."""
+        self.load_data()  # refresh
         return render_template(
             "index.html",
             posts=self.blog_posts,
             blogtitle="Mein Blog",
         )
 
-    def route_add(self) -> str:
+    def route_add(self) -> str | Response:
         """Render form on get or save post on post."""
         if request.method == "POST":
-            self.save_data(request.form.to_dict(flat=False))
+            self.save_data(request.form.to_dict())  # use flat=False for multi
+            return redirect(url_for("route_index"))
 
         return render_template("add.html")
 
@@ -50,6 +53,7 @@ class Masterblog:
         except OSError:
             print("Error writing to DB.")
         else:
+            # update view only if crud went successful
             self.blog_posts = posts_copy
             print(self.blog_posts)
 
