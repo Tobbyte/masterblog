@@ -58,8 +58,22 @@ class Masterblog:
         self.app.register_error_handler(500, self.internal_server_error)
         # load data here (not only in index route) to prevent failing
         # when accessing f.e. /update directly
-
         self.blog_posts = self.load_data()
+
+    def make_sure_files_exist(self) -> None:
+        """Ensure that the necessary files exist."""
+        try:
+            if not db_file_path.is_file():
+                with db_file_path.open(mode="w", encoding="utf-8") as file:
+                    file.write("[]")
+
+            if not uid_file_path.is_file():
+                with uid_file_path.open(mode="w", encoding="utf-8") as file:
+                    file.write("")
+
+        except OSError as e:
+            self.db_error = True
+            raise InternalServerError from e
 
     def check_db_health(self) -> None:
         """Check db health before every request.
