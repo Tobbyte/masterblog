@@ -271,6 +271,7 @@ class Masterblog:
             except json.JSONDecodeError:
                 print(ERR_DB_CORRUPT)
                 self.db_error = True
+                self.blog_posts = []
             else:
                 # reset in case error went puff
                 self.db_error = False
