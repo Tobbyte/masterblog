@@ -35,9 +35,17 @@ class Masterblog:
             view_func=self.route_update_post,
             methods=["GET", "POST"],
         )
+        self.app.register_error_handler(404, self.page_not_found)
+        self.app.register_error_handler(500, self.internal_server_error)
         # load data here (not only in index route) to prevent failing
         # when accessing f.e. /update directly
         self.blog_posts = self.load_data()
+
+    def page_not_found(self, error) -> tuple:
+        return render_template("404.html"), 404
+
+    def internal_server_error(self, error) -> tuple:
+        return render_template("500.html"), 500
 
     def get_last_uid_from_posts(self) -> int:
         """Cycles through all blog posts to get last id."""
