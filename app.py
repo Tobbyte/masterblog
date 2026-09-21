@@ -3,7 +3,6 @@
 import json
 import uuid
 from copy import deepcopy
-from pathlib import Path
 from typing import Any
 
 from config import (
@@ -20,7 +19,11 @@ from werkzeug.exceptions import InternalServerError
 
 
 class Masterblog:
-    """A simple Flask app for a blog."""
+    """A simple Flask app for a blog.
+
+    Note: update, delete, like expect post_id to be existing! Is now
+    checked by routs. Probably better to change that.
+    """
 
     def __init__(self) -> None:
         """Initialize the Flask app.
