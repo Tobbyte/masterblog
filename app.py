@@ -3,10 +3,10 @@
 import json
 import uuid
 from copy import deepcopy
-from json import JSONDecodeError
 from pathlib import Path
 from typing import Any
 
+from config import db_file_path, uid_file_path
 from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug import Response
 from werkzeug.exceptions import InternalServerError
@@ -22,13 +22,14 @@ class Masterblog:
         """
         self.app = Flask(__name__)
 
-        # Would normally live in .env
-        self.app.secret_key = "super-geheimer-uid-keyseed"
+        self.make_sure_files_exist()
 
-        self.db_error = False
+        # Would normally live in .env
+        self.app.secret_key = "super-geheimer-uid-keyseed"  # noqa: S105
 
         # db error throws on startup (not as request). so set flag in db
-        # startup (not raise there) and abort here.
+        # startup (not raise there) and abort per before_request.
+        self.db_error = False
         self.app.before_request(self.check_db_health)
 
         self.app.add_url_rule("/", view_func=self.route_index)
@@ -38,11 +39,13 @@ class Masterblog:
             view_func=self.route_add,
             methods=["GET", "POST"],
         )
+
         self.app.add_url_rule(
             "/delete/<int:post_id>",
             view_func=self.route_delete,
             methods=["POST"],
         )
+
         self.app.add_url_rule(
             "/update/<int:post_id>",
             view_func=self.route_update_post,
@@ -54,8 +57,10 @@ class Masterblog:
             view_func=self.route_like_post,
             methods=["POST"],
         )
+
         self.app.register_error_handler(404, self.page_not_found)
         self.app.register_error_handler(500, self.internal_server_error)
+
         # load data here (not only in index route) to prevent failing
         # when accessing f.e. /update directly
         self.blog_posts = self.load_data()
@@ -116,8 +121,8 @@ class Masterblog:
         try:
             with Path("data/uid").open(encoding="utf-8") as f:
                 last_uid = f.read()
-        except FileNotFoundError:
-            print("no uid file found, generate from posts.")
+        except OSError:
+            print("no preious post_uid found, generate from posts.")
             last_uid = ""
 
         try:
@@ -129,9 +134,13 @@ class Masterblog:
 
     def save_uid(self, new_uid: int) -> None:
         """Save the new UID to a file for future use."""
-        with Path("data/uid").open("w", encoding="utf-8") as f:
-            f.write(str(new_uid))
-            print("newuid:", new_uid)
+        try:
+            with Path("data/uid").open("w", encoding="utf-8") as f:
+                f.write(str(new_uid))
+                print("newuid:", new_uid)
+        except OSError as e:
+            print("coudn't save uid file, abort")
+            raise InternalServerError from e
 
     def route_index(self) -> str:
         """Render the index page with blog posts."""
@@ -165,11 +174,13 @@ class Masterblog:
         return session["user_uid"]
 
     def route_like_post(self, post_id: int) -> Response:
+        """Route for toggling like status for a post by its ID."""
         user_uid = self.get_user_uid()
         self.toggle_like(post_id, user_uid)
         return redirect(url_for("route_index"))
 
     def toggle_like(self, post_id: int, user_uid: str) -> None:
+        """Toggle the like status for a post by its ID."""
         posts_copy = deepcopy(self.blog_posts)
         for post in posts_copy:
             if post["id"] == post_id:
@@ -191,7 +202,7 @@ class Masterblog:
         """Render the update page on GET or save changes on POST."""
         post = self.fetch_post_by_id(post_id)
         if post is None:
-            return "Post not found", 404
+            return redirect(url_for("route_index"), 404)
 
         if request.method == "POST":
             posts_copy = deepcopy(self.blog_posts)
@@ -225,7 +236,7 @@ class Masterblog:
         Saves to db and updates runtime only on success.
         """
         try:
-            with Path("data/database.json").open("w", encoding="utf-8") as f:
+            with db_file_path.open("w", encoding="utf-8") as f:
                 f.write(json.dumps(blog_posts))
         except OSError as e:
             err_msg = "db write failed"
@@ -233,7 +244,6 @@ class Masterblog:
         else:
             # update view only if crud went successful
             self.blog_posts = blog_posts
-            print(self.blog_posts)
 
     def load_data(self) -> list:
         """Load blog posts from a JSON file."""
@@ -243,15 +253,13 @@ class Masterblog:
             self.blog_posts = []
         else:
             try:
-                with Path("data/database.json").open(encoding="utf-8") as f:
+                with db_file_path.open(encoding="utf-8") as f:
                     self.blog_posts = json.load(f)
-            except FileNotFoundError:
-                print("db file not found. init as empty.")
-                self.blog_posts = []
             except json.JSONDecodeError:
                 print("db file corrupt, abort.")
                 self.db_error = True
             else:
+                # reset in case error went puff
                 self.db_error = False
         return self.blog_posts
 
