@@ -171,6 +171,9 @@ class Masterblog:
 
     def route_delete(self, post_id: int) -> Response:
         """Delete a blog post by its ID."""
+        if self.fetch_post_by_id(post_id) is None:
+            return redirect(url_for("route_index"), 404)
+
         if request.method == "POST":
             self.del_post(post_id)  # use flat=False for multi
 
@@ -184,30 +187,27 @@ class Masterblog:
 
     def route_like_post(self, post_id: int) -> Response:
         """Route for toggling like status for a post by its ID."""
+        if self.fetch_post_by_id(post_id) is None:
+            return redirect(url_for("route_index"), 404)
+
         user_uid = self.get_user_uid()
         self.toggle_like(post_id, user_uid)
         return redirect(url_for("route_index"))
 
-    def toggle_like(self, post_id: int, user_uid: str) -> None | Response:
+    def toggle_like(self, post_id: int, user_uid: str) -> None:
         """Toggle the like status for a post by its ID."""
         posts_copy = deepcopy(self.blog_posts)
 
-        post_exists = False
         for post in posts_copy:
             if post["id"] == post_id:
-                post_exists = True
                 likes = post.setdefault("liked_by", [])
                 if user_uid in likes:
                     likes.remove(user_uid)
                 else:
                     likes.append(user_uid)
-
-        if not post_exists:
-            # should not be possible, but who knows.
-            return redirect(url_for("route_index"), 404)
+                break
 
         self.save_data(posts_copy)
-        return None
 
     def fetch_post_by_id(self, post_id: int) -> dict | None:
         """Fetch a blog post from runtime data by its ID."""
