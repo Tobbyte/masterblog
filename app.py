@@ -42,29 +42,29 @@ class Masterblog:
         self.db_error = False
         self.app.before_request(self.check_db_health)
 
-        self.app.add_url_rule("/", view_func=self.route_index)
+        self.app.add_url_rule("/", view_func=self.index)
 
         self.app.add_url_rule(
             "/add",
-            view_func=self.route_add,
+            view_func=self.add,
             methods=["GET", "POST"],
         )
 
         self.app.add_url_rule(
             "/delete/<int:post_id>",
-            view_func=self.route_delete,
+            view_func=self.delete,
             methods=["POST"],
         )
 
         self.app.add_url_rule(
             "/update/<int:post_id>",
-            view_func=self.route_update_post,
+            view_func=self.update_post,
             methods=["GET", "POST"],
         )
 
         self.app.add_url_rule(
             "/like/<int:post_id>",
-            view_func=self.route_like_post,
+            view_func=self.like_post,
             methods=["POST"],
         )
 
@@ -151,7 +151,7 @@ class Masterblog:
             print(ERR_SAVE_POST_UID)
             raise InternalServerError from e
 
-    def route_index(self) -> str:
+    def index(self) -> str:
         """Render the index page with blog posts."""
         self.blog_posts = self.load_data()
         return render_template(
@@ -161,23 +161,23 @@ class Masterblog:
             blogtitle="Mein Blog",
         )
 
-    def route_add(self) -> str | Response:
+    def add(self) -> str | Response:
         """Render form on get or save post on post."""
         if request.method == "POST":
             self.add_post(request.form.to_dict())  # use flat=False for multi
-            return redirect(url_for("route_index"))
+            return redirect(url_for("index"))
 
         return render_template("add.html")
 
-    def route_delete(self, post_id: int) -> Response:
+    def delete(self, post_id: int) -> Response:
         """Delete a blog post by its ID."""
         if self.fetch_post_by_id(post_id) is None:
-            return redirect(url_for("route_index"), 404)
+            return redirect(url_for("index"), 404)
 
         if request.method == "POST":
             self.del_post(post_id)  # use flat=False for multi
 
-        return redirect(url_for("route_index"))
+        return redirect(url_for("index"))
 
     def get_user_uid(self) -> str:
         """Get or create a user uid (for the current session)."""
@@ -185,14 +185,14 @@ class Masterblog:
             session["user_uid"] = str(uuid.uuid4())
         return session["user_uid"]
 
-    def route_like_post(self, post_id: int) -> Response:
+    def like_post(self, post_id: int) -> Response:
         """Route for toggling like status for a post by its ID."""
         if self.fetch_post_by_id(post_id) is None:
-            return redirect(url_for("route_index"), 404)
+            return redirect(url_for("index"), 404)
 
         user_uid = self.get_user_uid()
         self.toggle_like(post_id, user_uid)
-        return redirect(url_for("route_index"))
+        return redirect(url_for("index"))
 
     def toggle_like(self, post_id: int, user_uid: str) -> None:
         """Toggle the like status for a post by its ID."""
@@ -216,11 +216,11 @@ class Masterblog:
             None,
         )
 
-    def route_update_post(self, post_id: int) -> str | tuple | Response:
+    def update_post(self, post_id: int) -> str | tuple | Response:
         """Render the update page on GET or save changes on POST."""
         post = self.fetch_post_by_id(post_id)
         if post is None:
-            return redirect(url_for("route_index"), 404)
+            return redirect(url_for("index"), 404)
 
         if request.method == "POST":
             posts_copy = deepcopy(self.blog_posts)
@@ -230,7 +230,7 @@ class Masterblog:
                 for post in posts_copy
             ]
             self.save_data(posts)
-            return redirect(url_for("route_index"))
+            return redirect(url_for("index"))
 
         return render_template("update.html", post=post)
 

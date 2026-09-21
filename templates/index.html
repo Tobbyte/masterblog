@@ -20,7 +20,7 @@
         <p><em>Written by {{ post.author }}</em></p>
         <p>{{ post.content }}</p>
         <div class="post-actions">
-            <form class="like-form" action="{{ url_for('route_like_post', post_id=post.id) }}" method="post">
+            <form class="like-form" action="{{ url_for('like_post', post_id=post.id) }}" method="post">
                 {%if uuid not in post.liked_by%}
                 <input type="submit" value="❤️">
                 {% else %}
@@ -28,16 +28,16 @@
                 {% endif %}
             </form>
             <span class="like-count">{{ post.liked_by|length }}</span>
-            <form class="update-form" action="{{ url_for('route_update_post', post_id=post.id) }}">
+            <form class="update-form" action="{{ url_for('update_post', post_id=post.id) }}">
                 <input type="submit" value="Update Post">
             </form>
-            <form class="delete-form" action="{{ url_for('route_delete', post_id=post.id) }}" method="post">
+            <form class="delete-form" action="{{ url_for('delete', post_id=post.id) }}" method="post">
                 <input type="submit" value="Delete Post">
             </form>
         </div>
     </div>
     {% endfor %}
-    <a href="{{ url_for('route_add') }}" class="add-link">add new Post</a>
+    <a href="{{ url_for('add') }}" class="add-link">add new Post</a>
 </body>
 
 </html>
