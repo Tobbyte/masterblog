@@ -7,12 +7,12 @@ from pathlib import Path
 from typing import Any
 
 from config import (
+    DB_FILE_PATH,
     ERR_DB_CORRUPT,
     ERR_NO_POST_UID,
     ERR_SAVE_DATA_FAILED,
     ERR_SAVE_POST_UID,
-    db_file_path,
-    uid_file_path,
+    UID_FILE_PATH,
 )
 from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug import Response
@@ -75,12 +75,12 @@ class Masterblog:
     def make_sure_files_exist(self) -> None:
         """Ensure that the necessary files exist."""
         try:
-            if not db_file_path.is_file():
-                with db_file_path.open(mode="w", encoding="utf-8") as file:
+            if not DB_FILE_PATH.is_file():
+                with DB_FILE_PATH.open(mode="w", encoding="utf-8") as file:
                     file.write("[]")
 
-            if not uid_file_path.is_file():
-                with uid_file_path.open(mode="w", encoding="utf-8") as file:
+            if not UID_FILE_PATH.is_file():
+                with UID_FILE_PATH.open(mode="w", encoding="utf-8") as file:
                     file.write("")
 
         except OSError as e:
@@ -142,7 +142,7 @@ class Masterblog:
     def save_uid(self, new_uid: int) -> None:
         """Save the new UID to a file for future use."""
         try:
-            with uid_file_path.open("w", encoding="utf-8") as f:
+            with UID_FILE_PATH.open("w", encoding="utf-8") as f:
                 f.write(str(new_uid))
         except OSError as e:
             print(ERR_SAVE_POST_UID)
@@ -242,7 +242,7 @@ class Masterblog:
         Saves to db and updates runtime only on success.
         """
         try:
-            with db_file_path.open("w", encoding="utf-8") as f:
+            with DB_FILE_PATH.open("w", encoding="utf-8") as f:
                 f.write(json.dumps(blog_posts))
         except OSError as e:
             raise InternalServerError(ERR_SAVE_DATA_FAILED) from e
@@ -253,11 +253,11 @@ class Masterblog:
     def load_data(self) -> list:
         """Load blog posts from a JSON file."""
         # db file exists, but is empty
-        if db_file_path.stat().st_size == 0:
+        if DB_FILE_PATH.stat().st_size == 0:
             self.blog_posts = []
         else:
             try:
-                with db_file_path.open(encoding="utf-8") as f:
+                with DB_FILE_PATH.open(encoding="utf-8") as f:
                     self.blog_posts = json.load(f)
             except json.JSONDecodeError:
                 print(ERR_DB_CORRUPT)
