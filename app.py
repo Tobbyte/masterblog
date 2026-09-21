@@ -126,7 +126,7 @@ class Masterblog:
         empty uid file.
         """
         try:
-            with Path("data/uid").open(encoding="utf-8") as f:
+            with UID_FILE_PATH.open(encoding="utf-8") as f:
                 last_uid = f.read()
         except OSError:
             print(ERR_NO_POST_UID)
