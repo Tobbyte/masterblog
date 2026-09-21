@@ -185,17 +185,26 @@ class Masterblog:
         self.toggle_like(post_id, user_uid)
         return redirect(url_for("route_index"))
 
-    def toggle_like(self, post_id: int, user_uid: str) -> None:
+    def toggle_like(self, post_id: int, user_uid: str) -> None | Response:
         """Toggle the like status for a post by its ID."""
         posts_copy = deepcopy(self.blog_posts)
+
+        post_exists = False
         for post in posts_copy:
             if post["id"] == post_id:
+                post_exists = True
                 likes = post.setdefault("liked_by", [])
                 if user_uid in likes:
                     likes.remove(user_uid)
                 else:
                     likes.append(user_uid)
+
+        if not post_exists:
+            # should not be possible, but who knows.
+            return redirect(url_for("route_index"), 404)
+
         self.save_data(posts_copy)
+        return None
 
     def fetch_post_by_id(self, post_id: int) -> dict | None:
         """Fetch a blog post from runtime data by its ID."""
