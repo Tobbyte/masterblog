@@ -20,7 +20,6 @@ class Masterblog:
         Sets routes, loads initial data.
         """
         self.app = Flask(__name__)
-        self.blog_posts = []
         self.db_error = False
 
         # db error throws on startup (not as request). so set flag in db
@@ -58,6 +57,9 @@ class Masterblog:
         Gets called before every request.
         """
         if self.db_error:
+            self.blog_posts = (
+                self.load_data()
+            )  # call fresh to update on the fly
             raise InternalServerError
 
     def page_not_found(self, _) -> tuple:  # noqa: ANN001
@@ -199,6 +201,9 @@ class Masterblog:
             except json.JSONDecodeError:
                 print("db file corrupt, abort.")
                 self.db_error = True
+            else:
+                print("err gone")
+                self.db_error = False
         return self.blog_posts
 
     def run(self, **kwargs: Any) -> None:  # noqa: ANN401
