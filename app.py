@@ -95,21 +95,21 @@ class Masterblog:
 
         return render_template("add.html")
 
-    def route_delete(self, post_id) -> Response:
+    def route_delete(self, post_id: int) -> Response:
         """Delete a blog post by its ID."""
         if request.method == "POST":
             self.del_post(post_id)  # use flat=False for multi
 
         return redirect(url_for("route_index"))
 
-    def fetch_post_by_id(self, post_id) -> dict | None:
+    def fetch_post_by_id(self, post_id: int) -> dict | None:
         """Fetch a blog post from runtime data by its ID."""
         return next(
             filter(lambda post: post["id"] == post_id, self.blog_posts),
             None,
         )
 
-    def route_update_post(self, post_id) -> str | tuple | Response:
+    def route_update_post(self, post_id: int) -> str | tuple | Response:
         """Render the update page on GET or save changes on POST."""
         post = self.fetch_post_by_id(post_id)
         if post is None:
