@@ -35,7 +35,8 @@ class Masterblog:
             view_func=self.route_update_post,
             methods=["GET", "POST"],
         )
-
+        # load data here (not only in index route) to prevent failing
+        # when accessing f.e. /update directly
         self.blog_posts = self.load_data()
 
     def get_last_uid_from_posts(self) -> int:
