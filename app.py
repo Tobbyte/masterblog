@@ -20,7 +20,15 @@ class Masterblog:
         Sets routes, loads initial data.
         """
         self.app = Flask(__name__)
+        self.blog_posts = []
+        self.db_error = False
+
+        # db error throws on startup (not as request). so set flag in db
+        # startup (not raise there) and abort here.
+        self.app.before_request(self.check_db_health)
+
         self.app.add_url_rule("/", view_func=self.route_index)
+
         self.app.add_url_rule(
             "/add",
             view_func=self.route_add,
@@ -40,7 +48,17 @@ class Masterblog:
         self.app.register_error_handler(500, self.internal_server_error)
         # load data here (not only in index route) to prevent failing
         # when accessing f.e. /update directly
+
         self.blog_posts = self.load_data()
+
+    def check_db_health(self) -> None:
+        """Check db health before every request.
+
+        Raises InternalServerError if db is corrupted.
+        Gets called before every request.
+        """
+        if self.db_error:
+            raise InternalServerError
 
     def page_not_found(self, _) -> tuple:  # noqa: ANN001
         """Render the 404 error page."""
@@ -168,23 +186,19 @@ class Masterblog:
     def load_data(self) -> list:
         """Load blog posts from a JSON file."""
         db_path = Path("data/database.json")
-        try:
-            # db file exists, but is empty
-            if db_path.stat().st_size == 0:
-                self.blog_posts = []
-                self.save_data(self.blog_posts)
-            else:
-                with Path("data/database.json").open(encoding="utf-8") as f:
-                    try:
-                        self.blog_posts = json.load(f)
-                    except JSONDecodeError as e:
-                        print("Prob reading db file.")
-                        err_msg = "db write failed"
-                        raise InternalServerError(err_msg) from e
-        except FileNotFoundError:
-            print("Database file not found. Using empty blog posts.")
+        # db file exists, but is empty
+        if db_path.stat().st_size == 0:
             self.blog_posts = []
-            self.save_data(self.blog_posts)
+        else:
+            try:
+                with Path("data/database.json").open(encoding="utf-8") as f:
+                    self.blog_posts = json.load(f)
+            except FileNotFoundError:
+                print("db file not found. init as empty.")
+                self.blog_posts = []
+            except json.JSONDecodeError:
+                print("db file corrupt, abort.")
+                self.db_error = True
         return self.blog_posts
 
     def run(self, **kwargs: Any) -> None:  # noqa: ANN401
