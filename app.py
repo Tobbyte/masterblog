@@ -13,7 +13,10 @@ class Masterblog:
     """A simple Flask app for a blog."""
 
     def __init__(self) -> None:
-        """Initialize the Flask app."""
+        """Initialize the Flask app.
+
+        Sets routes, loads initial data.
+        """
         self.app = Flask(__name__)
         self.app.add_url_rule("/", view_func=self.route_index)
         self.app.add_url_rule(
@@ -31,6 +34,7 @@ class Masterblog:
             view_func=self.route_update_post,
             methods=["GET", "POST"],
         )
+
         self.blog_posts = self.load_data()
 
     def get_last_uid_from_posts(self) -> int:
@@ -42,8 +46,12 @@ class Masterblog:
 
         Reads the last used UID from a file and increments it for
         the next post.
-        If the file does not exist or is empty, it starts with
-        the num of the current blog posts + 1.
+        If the file does not exist or is empty, it finds the last id
+        in existing posts and increases by +1. Saves to uid file.
+
+        Note: This can lead to links to posts directing to the wring
+        post if posts got deleted and the blog is setup fresh with
+        empty uid file.
         """
         try:
             with Path("data/uid").open(encoding="utf-8") as f:
@@ -64,6 +72,7 @@ class Masterblog:
             return new_uid
 
     def save_uid(self, new_uid: int) -> None:
+        """Save the new UID to a file for future use."""
         with Path("data/uid").open("w", encoding="utf-8") as f:
             f.write(str(new_uid))
             print("newuid:", new_uid)
@@ -85,23 +94,22 @@ class Masterblog:
         return render_template("add.html")
 
     def route_delete(self, post_id) -> Response:
-        print(f"delete: {post_id}")
+        """Delete a blog post by its ID."""
         if request.method == "POST":
             self.del_post(post_id)  # use flat=False for multi
 
         return redirect(url_for("route_index"))
 
     def fetch_post_by_id(self, post_id) -> dict:
+        """Fetch a blog post from runtime data by its ID."""
         return next(
             filter(lambda post: post["id"] == post_id, self.blog_posts),
         )
 
     def route_update_post(self, post_id) -> str | tuple | Response:
-        print(f"update: {post_id}")
-        # Fetch the blog posts from the JSON file
+        """Render the update page on GET or save changes on POST."""
         post = self.fetch_post_by_id(post_id)
         if post is None:
-            # Post not found
             return "Post not found", 404
 
         if request.method == "POST":
@@ -114,25 +122,27 @@ class Masterblog:
             self.save_data(posts)
             return redirect(url_for("route_index"))
 
-        # Else, it's a GET request
-        # So display the update.html page
         return render_template("update.html", post=post)
 
-    def add_post(self, new_post):
+    def add_post(self, new_post: dict) -> None:
+        """Add a new blog post."""
         new_id = self.get_uid()
         new_post["id"] = new_id
         posts_copy = deepcopy(self.blog_posts)
         posts_copy.append(new_post)
         self.save_data(posts_copy)
 
-    def del_post(self, post_id: int):
-        print("del:", post_id)
+    def del_post(self, post_id: int) -> None:
+        """Delete a blog post by its ID."""
         posts_copy = deepcopy(self.blog_posts)
         posts = [post for post in posts_copy if post["id"] != post_id]
         self.save_data(posts)
 
     def save_data(self, blog_posts: list) -> None:
-        """Save a new blog post to the JSON file."""
+        """Save blog posts data.
+
+        Saves to db and updates runtime only on success.
+        """
         try:
             with Path("data/database.json").open("w", encoding="utf-8") as f:
                 f.write(json.dumps(blog_posts))
