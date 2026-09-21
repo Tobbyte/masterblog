@@ -1,12 +1,13 @@
 """A simple Flask app for a blog."""
 
 import json
+import uuid
 from copy import deepcopy
 from json import JSONDecodeError
 from pathlib import Path
 from typing import Any
 
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug import Response
 from werkzeug.exceptions import InternalServerError
 
@@ -20,6 +21,10 @@ class Masterblog:
         Sets routes, loads initial data.
         """
         self.app = Flask(__name__)
+
+        # Would normally live in .env
+        self.app.secret_key = "super-geheimer-uid-keyseed"
+
         self.db_error = False
 
         # db error throws on startup (not as request). so set flag in db
@@ -42,6 +47,12 @@ class Masterblog:
             "/update/<int:post_id>",
             view_func=self.route_update_post,
             methods=["GET", "POST"],
+        )
+
+        self.app.add_url_rule(
+            "/like/<int:post_id>",
+            view_func=self.route_like_post,
+            methods=["POST"],
         )
         self.app.register_error_handler(404, self.page_not_found)
         self.app.register_error_handler(500, self.internal_server_error)
@@ -112,6 +123,7 @@ class Masterblog:
         return render_template(
             "index.html",
             posts=self.blog_posts,  # refresh
+            uuid=self.get_user_uid(),
             blogtitle="Mein Blog",
         )
 
@@ -129,6 +141,28 @@ class Masterblog:
             self.del_post(post_id)  # use flat=False for multi
 
         return redirect(url_for("route_index"))
+
+    def get_user_uid(self) -> str:
+        """Get or create a user uid (for the current session)."""
+        if "user_uid" not in session:
+            session["user_uid"] = str(uuid.uuid4())
+        return session["user_uid"]
+
+    def route_like_post(self, post_id: int) -> Response:
+        user_uid = self.get_user_uid()
+        self.toggle_like(post_id, user_uid)
+        return redirect(url_for("route_index"))
+
+    def toggle_like(self, post_id: int, user_uid: str) -> None:
+        posts_copy = deepcopy(self.blog_posts)
+        for post in posts_copy:
+            if post["id"] == post_id:
+                likes = post.setdefault("liked_by", [])
+                if user_uid in likes:
+                    likes.remove(user_uid)
+                else:
+                    likes.append(user_uid)
+        self.save_data(posts_copy)
 
     def fetch_post_by_id(self, post_id: int) -> dict | None:
         """Fetch a blog post from runtime data by its ID."""
@@ -202,7 +236,6 @@ class Masterblog:
                 print("db file corrupt, abort.")
                 self.db_error = True
             else:
-                print("err gone")
                 self.db_error = False
         return self.blog_posts
 
