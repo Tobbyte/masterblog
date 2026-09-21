@@ -68,19 +68,15 @@ class Masterblog:
             with Path("data/uid").open(encoding="utf-8") as f:
                 last_uid = f.read()
         except FileNotFoundError:
+            print("no uid file found, generate from posts.")
             last_uid = ""
 
         try:
-            new_uid = (
-                int(last_uid) + 1
-                if last_uid
-                else self.get_last_uid_from_posts() + 1
-            )
-            self.save_uid(new_uid)
+            new_uid = int(last_uid) + 1
         except ValueError:
-            return 1
-        else:
-            return new_uid
+            new_uid = self.get_last_uid_from_posts() + 1
+        self.save_uid(new_uid)
+        return new_uid
 
     def save_uid(self, new_uid: int) -> None:
         """Save the new UID to a file for future use."""
