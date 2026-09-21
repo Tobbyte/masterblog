@@ -1,11 +1,13 @@
 """Configuration file for the Masterblog app."""
 from pathlib import Path
 
-db_file_name = "database.json"
-uid_file_name = "uid"
+DB_FILE_NAME = "database.json"
+UID_FILE_NAME = "uid"
 
-UID_FILE_PATH = Path("data/" + uid_file_name)
-DB_FILE_PATH = Path("data/" + db_file_name)
+PROJECT_ROOT = Path(__file__).resolve().parent  # project root
+
+UID_FILE_PATH = PROJECT_ROOT / Path("data/" + UID_FILE_NAME)
+DB_FILE_PATH = PROJECT_ROOT / Path("data/" + DB_FILE_NAME)
 
 
 ERR_NO_POST_UID = "No previous post_uid found, generate from posts."
