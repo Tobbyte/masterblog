@@ -11,7 +11,7 @@
 <body>
     <h1>Update Blog Post</h1>
 
-    <form action="{{ url_for('route_update_post', post_id=post['id']) }}" method="POST">
+    <form class="post-form" action="{{ url_for('route_update_post', post_id=post['id']) }}" method="POST">
         <label for="author">Title:</label><br>
         <input type="text" id="title" name="title" value="{{ post['title'] }}"><br>
         <label for="author">Author:</label><br>
@@ -20,7 +20,7 @@
         <input type="text" id="content" name="content" value="{{ post['content'] }}"><br>
         <input type="submit" value="Update">
     </form>
-    <a href="{{ url_for('route_index') }}">Go back to Home page</a>
+    <a href="{{ url_for('route_index') }}" class="back-link">back to Home page</a>
 </body>
 
 </html>
