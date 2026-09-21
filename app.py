@@ -6,7 +6,14 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-from config import db_file_path, uid_file_path
+from config import (
+    ERR_DB_CORRUPT,
+    ERR_NO_POST_UID,
+    ERR_SAVE_DATA_FAILED,
+    ERR_SAVE_POST_UID,
+    db_file_path,
+    uid_file_path,
+)
 from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug import Response
 from werkzeug.exceptions import InternalServerError
@@ -122,7 +129,7 @@ class Masterblog:
             with Path("data/uid").open(encoding="utf-8") as f:
                 last_uid = f.read()
         except OSError:
-            print("no preious post_uid found, generate from posts.")
+            print(ERR_NO_POST_UID)
             last_uid = ""
 
         try:
@@ -135,11 +142,10 @@ class Masterblog:
     def save_uid(self, new_uid: int) -> None:
         """Save the new UID to a file for future use."""
         try:
-            with Path("data/uid").open("w", encoding="utf-8") as f:
+            with uid_file_path.open("w", encoding="utf-8") as f:
                 f.write(str(new_uid))
-                print("newuid:", new_uid)
         except OSError as e:
-            print("coudn't save uid file, abort")
+            print(ERR_SAVE_POST_UID)
             raise InternalServerError from e
 
     def route_index(self) -> str:
@@ -239,24 +245,22 @@ class Masterblog:
             with db_file_path.open("w", encoding="utf-8") as f:
                 f.write(json.dumps(blog_posts))
         except OSError as e:
-            err_msg = "db write failed"
-            raise InternalServerError(err_msg) from e
+            raise InternalServerError(ERR_SAVE_DATA_FAILED) from e
         else:
             # update view only if crud went successful
             self.blog_posts = blog_posts
 
     def load_data(self) -> list:
         """Load blog posts from a JSON file."""
-        db_path = Path("data/database.json")
         # db file exists, but is empty
-        if db_path.stat().st_size == 0:
+        if db_file_path.stat().st_size == 0:
             self.blog_posts = []
         else:
             try:
                 with db_file_path.open(encoding="utf-8") as f:
                     self.blog_posts = json.load(f)
             except json.JSONDecodeError:
-                print("db file corrupt, abort.")
+                print(ERR_DB_CORRUPT)
                 self.db_error = True
             else:
                 # reset in case error went puff
