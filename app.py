@@ -102,10 +102,11 @@ class Masterblog:
 
         return redirect(url_for("route_index"))
 
-    def fetch_post_by_id(self, post_id) -> dict:
+    def fetch_post_by_id(self, post_id) -> dict | None:
         """Fetch a blog post from runtime data by its ID."""
         return next(
             filter(lambda post: post["id"] == post_id, self.blog_posts),
+            None,
         )
 
     def route_update_post(self, post_id) -> str | tuple | Response:
