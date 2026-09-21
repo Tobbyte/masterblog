@@ -8,6 +8,7 @@ from typing import Any
 
 from flask import Flask, redirect, render_template, request, url_for
 from werkzeug import Response
+from werkzeug.exceptions import InternalServerError
 
 
 class Masterblog:
@@ -158,8 +159,9 @@ class Masterblog:
         try:
             with Path("data/database.json").open("w", encoding="utf-8") as f:
                 f.write(json.dumps(blog_posts))
-        except OSError:
-            print("Error writing to DB.")
+        except OSError as e:
+            err_msg = "db write failed"
+            raise InternalServerError(err_msg) from e
         else:
             # update view only if crud went successful
             self.blog_posts = blog_posts
@@ -177,8 +179,10 @@ class Masterblog:
                 with Path("data/database.json").open(encoding="utf-8") as f:
                     try:
                         self.blog_posts = json.load(f)
-                    except JSONDecodeError:
+                    except JSONDecodeError as e:
                         print("Prob reading db file.")
+                        err_msg = "db write failed"
+                        raise InternalServerError(err_msg) from e
         except FileNotFoundError:
             print("Database file not found. Using empty blog posts.")
             self.blog_posts = []
