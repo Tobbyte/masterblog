@@ -24,6 +24,7 @@ class Masterblog:
         self.app.add_url_rule(
             "/delete/<int:post_id>",
             view_func=self.route_delete,
+            methods=["POST"],
             methods=["GET", "POST"],
         )
         self.blog_posts = self.load_data()
