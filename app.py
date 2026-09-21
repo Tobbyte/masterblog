@@ -42,11 +42,13 @@ class Masterblog:
         # when accessing f.e. /update directly
         self.blog_posts = self.load_data()
 
-    def page_not_found(self, error) -> tuple:
+    def page_not_found(self, _) -> tuple:  # noqa: ANN001
+        """Render the 404 error page."""
         return render_template("404.html"), 404
 
-    def internal_server_error(self, error) -> tuple:
-        return render_template("500.html"), 500
+    def internal_server_error(self, error: type[Exception] | int) -> tuple:
+        """Render the 500 error page."""
+        return render_template("500.html", error=error), 500
 
     def get_last_uid_from_posts(self) -> int:
         """Cycles through all blog posts to get last id."""
