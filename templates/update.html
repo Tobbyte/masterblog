@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Update Blog Post</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
@@ -19,6 +20,7 @@
         <input type="text" id="content" name="content" value="{{ post['content'] }}"><br>
         <input type="submit" value="Update">
     </form>
+    <a href="{{ url_for('route_index') }}">Go back to Home page</a>
 </body>
 
 </html>
