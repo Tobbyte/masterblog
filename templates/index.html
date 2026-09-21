@@ -10,6 +10,9 @@
 
 <body>
     <h1>{{blogtitle}}</h1>
+    {% if posts|length==0 %}
+    <p><em>Write the first post!</em></p>
+    {% endif%}
     {% for post in posts %}
     <div class="post">
         <h2>{{ post.id }}</h2>

@@ -2,6 +2,7 @@
 
 import json
 from copy import deepcopy
+from json import JSONDecodeError
 from pathlib import Path
 from typing import Any
 
@@ -79,9 +80,10 @@ class Masterblog:
 
     def route_index(self) -> str:
         """Render the index page with blog posts."""
+        self.blog_posts = self.load_data()
         return render_template(
             "index.html",
-            posts=self.load_data(),  # refresh
+            posts=self.blog_posts,  # refresh
             blogtitle="Mein Blog",
         )
 
@@ -155,12 +157,22 @@ class Masterblog:
 
     def load_data(self) -> list:
         """Load blog posts from a JSON file."""
+        db_path = Path("data/database.json")
         try:
-            with Path("data/database.json").open(encoding="utf-8") as f:
-                self.blog_posts = json.load(f)
+            # db file exists, but is empty
+            if db_path.stat().st_size == 0:
+                self.blog_posts = []
+                self.save_data(self.blog_posts)
+            else:
+                with Path("data/database.json").open(encoding="utf-8") as f:
+                    try:
+                        self.blog_posts = json.load(f)
+                    except JSONDecodeError:
+                        print("Prob reading db file.")
         except FileNotFoundError:
             print("Database file not found. Using empty blog posts.")
             self.blog_posts = []
+            self.save_data(self.blog_posts)
         return self.blog_posts
 
     def run(self, **kwargs: Any) -> None:  # noqa: ANN401
