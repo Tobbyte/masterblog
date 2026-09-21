@@ -77,8 +77,11 @@ class Masterblog:
         Raises InternalServerError if db is corrupted.
         Gets called before every request.
         """
+        if request.endpoint == "static":
+            return
+
+        self.blog_store.load()  # call fresh to update on the fly
         if self.blog_store.db_error:
-            self.blog_store.load()  # call fresh to update on the fly
             raise InternalServerError
 
     def page_not_found(self, _) -> tuple:  # noqa: ANN001
