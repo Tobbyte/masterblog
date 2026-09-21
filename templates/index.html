@@ -20,6 +20,9 @@
         <form action="{{ url_for('route_delete', post_id=post.id) }}" method="post">
             <input type="submit" value="Delete Post">
         </form>
+        <form action="{{ url_for('route_update_post', post_id=post.id) }}">
+            <input type="submit" value="Update Post">
+        </form>
     </div>
     {% endfor %}
     <a href="{{ url_for('route_add') }}">add Post</a>

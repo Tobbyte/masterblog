@@ -25,6 +25,10 @@ class Masterblog:
             "/delete/<int:post_id>",
             view_func=self.route_delete,
             methods=["POST"],
+        )
+        self.app.add_url_rule(
+            "/update/<int:post_id>",
+            view_func=self.route_update_post,
             methods=["GET", "POST"],
         )
         self.blog_posts = self.load_data()
@@ -86,6 +90,33 @@ class Masterblog:
             self.del_post(post_id)  # use flat=False for multi
 
         return redirect(url_for("route_index"))
+
+    def fetch_post_by_id(self, post_id) -> dict:
+        return next(
+            filter(lambda post: post["id"] == post_id, self.blog_posts),
+        )
+
+    def route_update_post(self, post_id) -> str | tuple | Response:
+        print(f"update: {post_id}")
+        # Fetch the blog posts from the JSON file
+        post = self.fetch_post_by_id(post_id)
+        if post is None:
+            # Post not found
+            return "Post not found", 404
+
+        if request.method == "POST":
+            posts_copy = deepcopy(self.blog_posts)
+            new_post = request.form.to_dict()
+            posts = [
+                {**post, **new_post} if post["id"] == post_id else post
+                for post in posts_copy
+            ]
+            self.save_data(posts)
+            return redirect(url_for("route_index"))
+
+        # Else, it's a GET request
+        # So display the update.html page
+        return render_template("update.html", post=post)
 
     def add_post(self, new_post):
         new_id = self.get_uid()
