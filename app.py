@@ -1,15 +1,12 @@
 """A simple Flask app for a blog."""
 
-import json
 import uuid
 from copy import deepcopy
 from typing import Any
 
+from blog_store import BlogStore
 from config import (
-    DB_FILE_PATH,
-    ERR_DB_CORRUPT,
     ERR_NO_POST_UID,
-    ERR_SAVE_DATA_FAILED,
     ERR_SAVE_POST_UID,
     UID_FILE_PATH,
 )
@@ -32,14 +29,13 @@ class Masterblog:
         """
         self.app = Flask(__name__)
 
-        self.make_sure_files_exist()
+        self.blog_store = BlogStore()
 
         # Would normally live in .env
         self.app.secret_key = "super-geheimer-uid-keyseed"  # noqa: S105
 
         # db error throws on startup (not as request). so set flag in db
         # startup (not raise there) and abort per before_request.
-        self.db_error = False
         self.app.before_request(self.check_db_health)
 
         self.app.add_url_rule("/", view_func=self.index)
@@ -73,22 +69,7 @@ class Masterblog:
 
         # load data here (not only in index route) to prevent failing
         # when accessing f.e. /update directly
-        self.blog_posts = self.load_data()
-
-    def make_sure_files_exist(self) -> None:
-        """Ensure that the necessary files exist."""
-        try:
-            if not DB_FILE_PATH.is_file():
-                with DB_FILE_PATH.open(mode="w", encoding="utf-8") as file:
-                    file.write("[]")
-
-            if not UID_FILE_PATH.is_file():
-                with UID_FILE_PATH.open(mode="w", encoding="utf-8") as file:
-                    file.write("")
-
-        except OSError as e:
-            self.db_error = True
-            raise InternalServerError from e
+        self.blog_store.load()
 
     def check_db_health(self) -> None:
         """Check db health before every request.
@@ -96,10 +77,8 @@ class Masterblog:
         Raises InternalServerError if db is corrupted.
         Gets called before every request.
         """
-        if self.db_error:
-            self.blog_posts = (
-                self.load_data()
-            )  # call fresh to update on the fly
+        if self.blog_store.db_error:
+            self.blog_store.load()  # call fresh to update on the fly
             raise InternalServerError
 
     def page_not_found(self, _) -> tuple:  # noqa: ANN001
@@ -112,8 +91,9 @@ class Masterblog:
 
     def get_last_uid_from_posts(self) -> int:
         """Cycles through all blog posts to get last id."""
-        if self.blog_posts:
-            return max(post["id"] for post in self.blog_posts)
+        posts = self.blog_store.load()
+        if posts:
+            return max(post["id"] for post in posts)
         return 0
 
     def get_uid(self) -> int:
@@ -153,10 +133,10 @@ class Masterblog:
 
     def index(self) -> str:
         """Render the index page with blog posts."""
-        self.blog_posts = self.load_data()
+        posts = self.blog_store.load()
         return render_template(
             "index.html",
-            posts=self.blog_posts,  # refresh
+            posts=posts,  # refresh
             uuid=self.get_user_uid(),
             blogtitle="Mein Blog",
         )
@@ -196,7 +176,7 @@ class Masterblog:
 
     def toggle_like(self, post_id: int, user_uid: str) -> None:
         """Toggle the like status for a post by its ID."""
-        posts_copy = deepcopy(self.blog_posts)
+        posts_copy = deepcopy(self.blog_store.load())
 
         for post in posts_copy:
             if post["id"] == post_id:
@@ -207,12 +187,13 @@ class Masterblog:
                     likes.append(user_uid)
                 break
 
-        self.save_data(posts_copy)
+        self.blog_store.save(posts_copy)
 
     def fetch_post_by_id(self, post_id: int) -> dict | None:
         """Fetch a blog post from runtime data by its ID."""
+        posts = self.blog_store.load()
         return next(
-            filter(lambda post: post["id"] == post_id, self.blog_posts),
+            filter(lambda post: post["id"] == post_id, posts),
             None,
         )
 
@@ -223,13 +204,13 @@ class Masterblog:
             return redirect(url_for("index"), 404)
 
         if request.method == "POST":
-            posts_copy = deepcopy(self.blog_posts)
+            posts_copy = deepcopy(self.blog_store.load())
             new_post = request.form.to_dict()
             posts = [
                 {**post, **new_post} if post["id"] == post_id else post
                 for post in posts_copy
             ]
-            self.save_data(posts)
+            self.blog_store.save(posts)
             return redirect(url_for("index"))
 
         return render_template("update.html", post=post)
@@ -238,47 +219,15 @@ class Masterblog:
         """Add a new blog post."""
         new_id = self.get_uid()
         new_post["id"] = new_id
-        posts_copy = deepcopy(self.blog_posts)
+        posts_copy = deepcopy(self.blog_store.load())
         posts_copy.append(new_post)
-        self.save_data(posts_copy)
+        self.blog_store.save(posts_copy)
 
     def del_post(self, post_id: int) -> None:
         """Delete a blog post by its ID."""
-        posts_copy = deepcopy(self.blog_posts)
+        posts_copy = deepcopy(self.blog_store.load())
         posts = [post for post in posts_copy if post["id"] != post_id]
-        self.save_data(posts)
-
-    def save_data(self, blog_posts: list) -> None:
-        """Save blog posts data.
-
-        Saves to db and updates runtime only on success.
-        """
-        try:
-            with DB_FILE_PATH.open("w", encoding="utf-8") as f:
-                f.write(json.dumps(blog_posts))
-        except OSError as e:
-            raise InternalServerError(ERR_SAVE_DATA_FAILED) from e
-        else:
-            # update view only if crud went successful
-            self.blog_posts = blog_posts
-
-    def load_data(self) -> list:
-        """Load blog posts from a JSON file."""
-        # db file exists, but is empty
-        if DB_FILE_PATH.stat().st_size == 0:
-            self.blog_posts = []
-        else:
-            try:
-                with DB_FILE_PATH.open(encoding="utf-8") as f:
-                    self.blog_posts = json.load(f)
-            except json.JSONDecodeError:
-                print(ERR_DB_CORRUPT)
-                self.db_error = True
-                self.blog_posts = []
-            else:
-                # reset in case error went puff
-                self.db_error = False
-        return self.blog_posts
+        self.blog_store.save(posts)
 
     def run(self, **kwargs: Any) -> None:  # noqa: ANN401
         """Start the Flask app."""
