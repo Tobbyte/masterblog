@@ -83,7 +83,9 @@ class Masterblog:
 
     def get_last_uid_from_posts(self) -> int:
         """Cycles through all blog posts to get last id."""
-        return max(post["id"] for post in self.blog_posts)
+        if self.blog_posts:
+            return max(post["id"] for post in self.blog_posts)
+        return 0
 
     def get_uid(self) -> int:
         """Get a unique identifier for a new blog post.
