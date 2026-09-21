@@ -226,9 +226,7 @@ class Masterblog:
             posts_copy = deepcopy(self.blog_posts)
             new_post = request.form.to_dict()
             posts = [
-                {**post, **new_post, "id": self.get_uid()}
-                if post["id"] == post_id
-                else post
+                {**post, **new_post} if post["id"] == post_id else post
                 for post in posts_copy
             ]
             self.save_data(posts)
