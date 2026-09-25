@@ -222,8 +222,10 @@ class Masterblog:
             posts_copy = deepcopy(self.blog_store.load())
             new_post = request.form.to_dict()
             posts = [
-                {**post, **new_post} if post["id"] == post_id else post
-                for post in posts_copy
+                {**post_copy, **new_post}
+                if post_copy["id"] == post_id
+                else post_copy
+                for post_copy in posts_copy
             ]
             self.blog_store.save(posts)
             return redirect(url_for("index"))
