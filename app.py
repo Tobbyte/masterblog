@@ -165,7 +165,7 @@ class Masterblog:
         return render_template("add.html")
 
     def delete(self, post_id: int) -> Response:
-        """Delete a blog post by its ID."""
+        """Delete blog post route."""
         if self.fetch_post_by_id(post_id) is None:
             abort(404)
 
@@ -181,7 +181,7 @@ class Masterblog:
         return session["user_uid"]
 
     def like_post(self, post_id: int) -> Response:
-        """Route for toggling like status for a post by its ID."""
+        """Toggle like route."""
         if self.fetch_post_by_id(post_id) is None:
             abort(404)
 
