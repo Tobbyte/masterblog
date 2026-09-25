@@ -22,6 +22,7 @@ class BlogStore:
     def make_sure_file_exists(self) -> None:
         """Ensure that the db file exists."""
         try:
+            DB_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
             if not DB_FILE_PATH.is_file():
                 with DB_FILE_PATH.open(mode="w", encoding="utf-8") as file:
                     file.write("[]")
