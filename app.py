@@ -26,8 +26,7 @@ from werkzeug.exceptions import InternalServerError
 class Masterblog:
     """A simple Flask app for a blog.
 
-    Note: update, delete, like expect post_id to be existing! Is now
-    checked by routs. Probably better to change that.
+    Allows users to add, update, delete, and like blog posts.
     """
 
     def __init__(self) -> None:
