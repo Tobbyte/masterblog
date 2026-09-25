@@ -10,7 +10,15 @@ from config import (
     ERR_SAVE_POST_UID,
     UID_FILE_PATH,
 )
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import (
+    Flask,
+    abort,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from werkzeug import Response
 from werkzeug.exceptions import InternalServerError
 
@@ -155,7 +163,7 @@ class Masterblog:
     def delete(self, post_id: int) -> Response:
         """Delete a blog post by its ID."""
         if self.fetch_post_by_id(post_id) is None:
-            return redirect(url_for("index"), 404)
+            abort(404)
 
         if request.method == "POST":
             self.del_post(post_id)  # use flat=False for multi
@@ -171,7 +179,7 @@ class Masterblog:
     def like_post(self, post_id: int) -> Response:
         """Route for toggling like status for a post by its ID."""
         if self.fetch_post_by_id(post_id) is None:
-            return redirect(url_for("index"), 404)
+            abort(404)
 
         user_uid = self.get_user_uid()
         self.toggle_like(post_id, user_uid)
@@ -204,7 +212,7 @@ class Masterblog:
         """Render the update page on GET or save changes on POST."""
         post = self.fetch_post_by_id(post_id)
         if post is None:
-            return redirect(url_for("index"), 404)
+            abort(404)
 
         if request.method == "POST":
             posts_copy = deepcopy(self.blog_store.load())
