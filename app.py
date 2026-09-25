@@ -96,7 +96,7 @@ class Masterblog:
         """Render the 404 error page."""
         return render_template("404.html"), 404
 
-    def internal_server_error(self, error: type[Exception] | int) -> tuple:
+    def internal_server_error(self, error: Exception) -> tuple:
         """Render the 500 error page."""
         return render_template("500.html", error=error), 500
 
