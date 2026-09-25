@@ -166,7 +166,7 @@ class Masterblog:
             abort(404)
 
         if request.method == "POST":
-            self.del_post(post_id)  # use flat=False for multi
+            self.del_post(post_id)
 
         return redirect(url_for("index"))
 
