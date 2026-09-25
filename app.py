@@ -225,6 +225,10 @@ class Masterblog:
     def update_post_data(self, post_id: int, new_post_data: dict) -> None:
         """Update the data of a blog post by its ID."""
         posts_copy = deepcopy(self.blog_store.load())
+
+        # Ensure id cant be changed, f.e. hidden input field in form
+        new_post_data.pop("id", None)
+
         posts = [
             {**post_copy, **new_post_data}
             if post_copy["id"] == post_id
