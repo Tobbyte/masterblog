@@ -1,0 +1,196 @@
+/* ---- Grundlagen ---- */
+
+* {
+    box-sizing: border-box;
+}
+body {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #F4F3EF;
+        color: #2B2B28;
+        line-height: 1.5;
+        margin: 0 auto;
+        padding: 40px 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #2B2B28;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin-bottom: 32px;
+}
+
+a {
+    color: #3A6B62;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ---- Buttons (Submit-Inputs), Basis ---- */
+
+input[type="submit"] {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    background-color: #3A6B62;
+    color: #FFFFFF;
+    transition: background-color 0.15s ease;
+}
+
+input[type="submit"]:hover {
+    background-color: #2E534C;
+}
+
+/* ---- Blog-Posts ---- */
+.post {
+    background-color: #FFFFFF;
+        border: 1px solid #E4E1D9;
+        border-radius: 10px;
+        padding: 20px 24px;
+        max-width: 640px;
+        margin: 0 auto 20px auto;
+    }
+    
+    .post-id {
+        display: inline-block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #8A8579;
+        background-color: #F4F3EF;
+        padding: 2px 8px;
+        border-radius: 5px;
+        margin: 0 0 10px 0;
+}
+
+.post h2 {
+    margin: 0 0 4px 0;
+    }
+    
+    .post p em {
+        color: #8A8579;
+        font-style: normal;
+        font-size: 14px;
+    }
+    
+    .post>p:last-of-type {
+        margin: 12px 0 16px 0;
+    }
+    
+    .empty-state {
+        text-align: center;
+        color: #8A8579;
+    }
+    
+    /* ---- Post-Aktionen: Like, Update, Delete in einer Reihe ---- */
+    
+    .post-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .post-actions form {
+        margin: 0;
+    }
+    
+    .like-form input[type="submit"] {
+        background: transparent;
+        border: 1px solid #E4E1D9;
+        font-size: 18px;
+        padding: 4px 10px;
+    }
+    
+    .like-form input[type="submit"]:hover {
+        background-color: #F4F3EF;
+    }
+    
+    .like-count {
+        font-size: 14px;
+        color: #8A8579;
+        margin-right: auto;
+    }
+    
+    .update-form input[type="submit"] {
+        background: transparent;
+        color: #3A6B62;
+        border: 1px solid #C7DAD5;
+    }
+    
+    .update-form input[type="submit"]:hover {
+        background-color: #EAF2F0;
+    }
+    
+    .delete-form input[type="submit"] {
+        background: transparent;
+        color: #B24B3C;
+        border: 1px solid #E7C9C2;
+    }
+    
+    .delete-form input[type="submit"]:hover {
+        background-color: #FBEEEC;
+    }
+    
+    .add-link {
+        display: block;
+        text-align: center;
+        margin-top: 8px;
+    }
+    
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 8px;
+    }
+    
+    /* ---- Formulare (Add / Update) ---- */
+    
+    .post-form {
+        background-color: #FFFFFF;
+        border: 1px solid #E4E1D9;
+        border-radius: 10px;
+        padding: 24px 28px;
+        max-width: 640px;
+        margin: 0 auto;
+    }
+    
+    .post-form label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #57534A;
+        margin: 14px 0 4px 0;
+    }
+    
+    .post-form input[type="text"] {
+        width: 100%;
+        font-family: inherit;
+        font-size: 15px;
+        padding: 9px 12px;
+        border: 1px solid #DAD6CC;
+        border-radius: 6px;
+        background-color: #FFFFFF;
+    }
+    
+    .post-form input[type="text"]:focus {
+        outline: none;
+        border-color: #3A6B62;
+    }
+    
+    .post-form input[type="submit"] {
+        margin-top: 18px;
+}
+
+/* ---- 404 / 500 ---- */
+
+.status-page {
+    max-width: 480px;
+    margin: 60px auto 0 auto;
+    text-align: center;
+}
