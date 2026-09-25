@@ -17,9 +17,9 @@ class BlogStore:
     def __init__(self) -> None:
         """Init storage and ensure the db file exists."""
         self.db_error = False
-        self.make_sure_file_exists()
+        self._make_sure_file_exists()
 
-    def make_sure_file_exists(self) -> None:
+    def _make_sure_file_exists(self) -> None:
         """Ensure that the db file exists."""
         try:
             DB_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
