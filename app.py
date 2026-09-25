@@ -57,6 +57,8 @@ class Masterblog:
         self.app.add_url_rule(
             "/delete/<int:post_id>",
             view_func=self.delete,
+            # note: exercise says "access route directly", which
+            # implies GET. Won't do, bad practice.
             methods=["POST"],
         )
 
