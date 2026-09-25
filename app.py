@@ -96,11 +96,13 @@ class Masterblog:
         if self.blog_store.db_error:
             raise InternalServerError
 
-    def page_not_found(self, _) -> tuple:  # noqa: ANN001
+    @staticmethod
+    def page_not_found(_) -> tuple:  # noqa: ANN001
         """Render the 404 error page."""
         return render_template("404.html"), 404
 
-    def internal_server_error(self, error: Exception) -> tuple:
+    @staticmethod
+    def internal_server_error(error: Exception) -> tuple:
         """Render the 500 error page."""
         return render_template("500.html", error=error), 500
 
