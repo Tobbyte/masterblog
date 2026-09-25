@@ -213,24 +213,25 @@ class Masterblog:
         )
 
     def update_post(self, post_id: int) -> str | tuple | Response:
-        """Render the update page on GET or save changes on POST."""
+        """Update post route."""
         post = self.fetch_post_by_id(post_id)
         if post is None:
             abort(404)
-
         if request.method == "POST":
-            posts_copy = deepcopy(self.blog_store.load())
-            new_post = request.form.to_dict()
-            posts = [
-                {**post_copy, **new_post}
-                if post_copy["id"] == post_id
-                else post_copy
-                for post_copy in posts_copy
-            ]
-            self.blog_store.save(posts)
+            self.update_post_data(post_id, request.form.to_dict())
             return redirect(url_for("index"))
-
         return render_template("update.html", post=post)
+
+    def update_post_data(self, post_id: int, new_post_data: dict) -> None:
+        """Update the data of a blog post by its ID."""
+        posts_copy = deepcopy(self.blog_store.load())
+        posts = [
+            {**post_copy, **new_post_data}
+            if post_copy["id"] == post_id
+            else post_copy
+            for post_copy in posts_copy
+        ]
+        self.blog_store.save(posts)
 
     def add_post(self, new_post: dict) -> None:
         """Add a new blog post."""
