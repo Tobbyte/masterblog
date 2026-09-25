@@ -1,4 +1,7 @@
-"""A simple Flask app for a blog."""
+"""A simple Flask app for a blog.
+
+~ Made with ❤️ and without ai or code completion ~
+"""
 
 import uuid
 from copy import deepcopy
